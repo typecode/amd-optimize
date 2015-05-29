@@ -128,7 +128,7 @@ module.exports = traceModule = (startModuleName, config, allModules = [], fileLo
     async.waterfall([
 
       (callback) ->
-        fileLoader(fileName, callback, isTextFile)
+        fileLoader(fileName, callback, isTextFile or isJsonFile)
 
       (file, callback) ->
 
