@@ -33,7 +33,7 @@ firstChunk = (stream, callback) ->
   return
 
 
-collectModules = (module, omitInline = true) ->
+collectModules = (modules, omitInline = true) ->
 # Depth-first search over the module dependency tree
 
   outputBuffer = []
@@ -45,8 +45,10 @@ collectModules = (module, omitInline = true) ->
     )
     if not (omitInline and currentModule.isInline) and not _.any(outputBuffer, name : currentModule.name)
       outputBuffer.push(currentModule)
-
-  collector(module)
+  
+  modules.forEach( (module) ->
+    collector(module);
+  )
 
   return outputBuffer
 
@@ -85,7 +87,7 @@ defaultLoader = (fileBuffer, options) ->
 
 
 
-module.exports = rjs = (entryModuleName, options = {}) ->
+module.exports = rjs = (entryModuleData, options = {}) ->
 
   # Default options
   options = _.defaults(
@@ -148,7 +150,18 @@ module.exports = rjs = (entryModuleName, options = {}) ->
         (callback) ->
 
           # Trace entry module
-          trace(entryModuleName, options, null, defaultLoader(fileBuffer, options), callback)
+          moduleNames = if entryModuleData.constructor == Array then entryModuleData else [entryModuleData]
+          async.map(
+            moduleNames,
+           (moduleName, callback) ->
+             trace(moduleName, options, null, defaultLoader(fileBuffer, options), callback)
+               
+           (err, modules) ->
+             if err
+               callback(err);
+             else
+               callback(null, modules);
+         )
 
         (module, callback) ->
 
@@ -170,7 +183,7 @@ module.exports = rjs = (entryModuleName, options = {}) ->
                   callback(err)
                 else
                   callback(null, modules, _(excludedModules)
-                    .map((module) -> collectModules(module))
+                    .map((module) -> collectModules([module]))
                     .flatten()
                     .pluck("name")
                     .unique()
