@@ -148,9 +148,15 @@ module.exports = rjs = (entryModuleData, options = {}) ->
             callback()
 
         (callback) ->
-
           # Trace entry module
-          moduleNames = if entryModuleData.constructor == Array then entryModuleData else [entryModuleData]
+
+          if entryModuleData == null
+             moduleNames = fileBuffer.map((file) ->
+               file.path.replace(file.base, '').replace '.js', ''
+			 )
+          else
+            moduleNames = if _.isArray(entryModuleData) then entryModuleData else [entryModuleData]
+
           async.map(
             moduleNames,
            (moduleName, callback) ->

@@ -13,7 +13,7 @@ module.exports = fixModule = (options = {}) ->
 
   through.obj( (module, enc, done) ->
 
-    if module.isShallow
+    if module.isShallow or (typeof module.file.ast == "undefined")
       done()
       return
 
